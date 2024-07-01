@@ -2,11 +2,6 @@ import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 
 
-
-import meta1 from "./metadata/1.json";
-import meta2 from "./metadata/2.json";
-import meta3 from "./metadata/3.json";
-
 // Components
 import Navigation from './components/Navigation';
 import Search from './components/Search';
@@ -19,6 +14,7 @@ import Escrow from './abis/Escrow.json'
 // Config
 import config from './config.json';
 
+
 function App() {
   const [provider, setProvider] = useState(null)
   const [escrow, setEscrow] = useState(null)
@@ -30,35 +26,34 @@ function App() {
   const [toggle, setToggle] = useState(false);
   
   const loadBlockchainData = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    const provider = new ethers.BrowserProvider(window.ethereum)
     setProvider(provider)
     const network = await provider.getNetwork()
     const homes = []
     
-    // const realEstate = new ethers.Contract(config[network.chainId].realEstate.address, RealEstate, provider);
-    // console.log(realEstate)
-    // const totalSupply = await realEstate.totalSupply();
-    // console.log(totalSupply);
+    const realEstate = new ethers.Contract(config[network.chainId].realEstate.address, RealEstate, provider);
+    console.log(realEstate)
+    const totalSupply = await realEstate.totalSupply();
+    console.log(totalSupply);
     
     
-    // console.log("hello1");
+    console.log("hello1");
     
-    // for (var i = 1; i <= totalSupply; i++) {
-    //   const uri = await realEstate.tokenURI(i)
-    //   console.log(uri);
-    //   const response = await fetch(uri,{mode:"no-cors"})
-    //   console.log(response);
-    //   const metadata = await response.json();
-    //   console.log("hello4");
-    //   homes.push(metadata)
-    // }
+    for (var i = 1; i <= totalSupply; i++) {
+      const uri = await realEstate.tokenURI(i)
+      console.log(uri);
+      const response = await fetch(uri)
+      console.log(response);
+      const metadata = await response.json();
+      console.log("hello4");
+      homes.push(metadata)
+    }
 
-    homes.push(meta1);
-    homes.push(meta2);
-    homes.push(meta3);
+    // homes.push(meta2);
+    // homes.push(meta3);
     setHomes(homes)
     const temp = async()=>{
-      const escrow = new ethers.Contract(config[network.chainId].escrow.address, Escrow, await provider.getSigner())
+      const escrow = new ethers.Contract(config[network.chainId].escrow.address, Escrow, provider)
       setEscrow(escrow)
       console.log(escrow);
     }
@@ -66,7 +61,7 @@ function App() {
 
     window.ethereum.on('accountsChanged', async () => {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const account = ethers.utils.getAddress(accounts[0])
+      const account = accounts[0];
       setAccount(account);
     })
   }
