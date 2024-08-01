@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react';
 
 import close from '../assets/close.svg';
 
-const Home = ({ home, provider, account, escrow, togglePop }) => {
+
+const Home = ({Escrow, home, provider, account, escrow, togglePop }) => {
     const [hasBought, setHasBought] = useState(false)
     const [hasLended, setHasLended] = useState(false)
     const [hasInspected, setHasInspected] = useState(false)
-    const [hasSold, setHasSold] = useState(false)
+    let [hasSold, setHasSold] = useState(false)
 
     const [buyer, setBuyer] = useState(null)
     const [lender, setLender] = useState(null)
@@ -15,8 +16,13 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
     const [seller, setSeller] = useState(null)
 
     const [owner, setOwner] = useState(null)
+
+    const EscrowAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
     
+    console.log(hasSold);
+    hasSold = false;
     const fetchDetails = async () => {
+
         // -- Buyer
         
         let buyer = await escrow.buyer(home.id)
@@ -89,26 +95,29 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
     const inspectHandler = async () => {
         const signer = await provider.getSigner()
 
+        const contractInstanceInspector = new ethers.Contract(EscrowAddress,Escrow,signer);
+
         // Inspector updates status
-        const transaction = await escrow.connect(signer).updateInspectionStatus(home.id, true)
-        await transaction.wait()
+        const transaction = await contractInstanceInspector.updateInspectionStatus(home.id, true);
+        await transaction.wait();
 
         setHasInspected(true)
     }
 
     const lendHandler = async () => {
+        console.log(hasLended);
         const signer = await provider.getSigner()
 
-        // Lender approves...
+        // // Lender approves...
         const transaction = await escrow.connect(signer).approveSale(home.id)
         await transaction.wait()
 
-        // Lender sends funds to contract...
-        // const lendAmount = (await escrow.purchasePrice(home.id) - await escrow.escrowAmount(home.id))
-        // const txn = await signer.sendTransaction({ to: await escrow.getAddress(), value: lendAmount.toString(), gasLimit: 60000 })
-        // await txn.wait();
+        //Lender sends funds to contract...
+        const lendAmount = (await escrow.purchasePrice(home.id) - await escrow.escrowAmount(home.id))
+        const txn = await signer.sendTransaction({ to: await escrow.getAddress(), value: lendAmount.toString(), gasLimit: 60000 })
+        await txn.wait();
 
-        // setHasLended(true)
+        setHasLended(true)
     }
 
     const sellHandler = async () => {
@@ -166,7 +175,7 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
                                     Approve & Sell
                                 </button>
                             ) : (
-                                <button className='home__buy' onClick={buyHandler} >
+                                <button className='home__buy' onClick={buyHandler} disabled = {hasBought} >
                                     Buy
                                 </button>
                             )}

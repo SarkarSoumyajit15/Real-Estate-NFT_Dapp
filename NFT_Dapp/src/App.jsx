@@ -16,6 +16,8 @@ import config from './config.json';
 
 
 function App() {
+  const realEstateAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const escrowAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
   const [provider, setProvider] = useState(null)
   const [escrow, setEscrow] = useState(null)
 
@@ -26,18 +28,22 @@ function App() {
   const [toggle, setToggle] = useState(false);
   
   const loadBlockchainData = async () => {
-    const provider = new ethers.BrowserProvider(window.ethereum)
+    const provider = new ethers.BrowserProvider(window.ethereum);
     setProvider(provider)
-    const network = await provider.getNetwork()
-    const homes = []
+    const network = await provider.getNetwork();
+    console.log(network.name);
+    console.log(network);
+  
+    const homes = [];
     
-    const realEstate = new ethers.Contract(config[network.chainId].realEstate.address, RealEstate, provider);
-    console.log(realEstate)
+    const realEstate = new ethers.Contract(realEstateAddress, RealEstate, provider);
+
+    
     const totalSupply = await realEstate.totalSupply();
     console.log(totalSupply);
     
     
-    console.log("hello1");
+    
     
     for (var i = 1; i <= totalSupply; i++) {
       const uri = await realEstate.tokenURI(i)
@@ -48,17 +54,17 @@ function App() {
       console.log("hello4");
       homes.push(metadata)
     }
-
+    
     // homes.push(meta2);
     // homes.push(meta3);
     setHomes(homes)
+    
     const temp = async()=>{
-      const escrow = new ethers.Contract(config[network.chainId].escrow.address, Escrow, provider)
+      const escrow = new ethers.Contract(escrowAddress, Escrow, provider)
       setEscrow(escrow)
-      console.log(escrow);
+
     }
     temp();
-
     window.ethereum.on('accountsChanged', async () => {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const account = accounts[0];
@@ -108,11 +114,12 @@ function App() {
       </div>
 
       {toggle && (
-        <Home home={home} provider={provider} account={account} escrow={escrow} togglePop={togglePop} />
+        <Home RealEstate = {RealEstate} Escrow = {Escrow} home={home} provider={provider} account={account} escrow={escrow} togglePop={togglePop} />
       )}
 
     </div>
   );
+  
 }
 
 export default App;
